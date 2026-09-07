@@ -15,7 +15,7 @@ app.add_middleware(
 )
  
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-MODEL = "llama3.2"
+MODEL = "devstral-small-2"
  
 memories: List[dict] = []
  
