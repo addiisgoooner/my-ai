@@ -15,7 +15,7 @@ app.add_middleware(
 )
  
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-MODEL = "devstral-small-2"
+MODEL = "devstral-small-2" 
  
 memories: List[dict] = []
  
@@ -43,7 +43,7 @@ async def chat(request: ChatRequest):
         }
     )
  
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=120.0) as client:
         response = await client.post(
             OLLAMA_URL,
             json={
