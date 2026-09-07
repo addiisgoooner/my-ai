@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Ollama Chat</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #202123;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            padding: 20px;
+            margin: 0;
+            background: #343541;
+            font-size: 22px;
+        }
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message {
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .user {
+            background: #343541;
+        }
+
+        .assistant {
+            background: #444654;
+        }
+
+        .label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: #343541;
+        }
+
+        input {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 14px 22px;
+            border: none;
+            border-radius: 6px;
+            background: #19c37d;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #777;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My Ollama AI</h1>
+
+        <div id="messages">
+            <div class="message assistant">
+                <div class="label">AI</div>
+                Hello. How can I help you?
+            </div>
+        </div>
+
+        <form id="chat-form">
+            <input
+                id="message-input"
+                type="text"
+                placeholder="Message your AI..."
+                autocomplete="off"
+                required
+            >
+            <button id="send-button" type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById("chat-form");
+        const input = document.getElementById("message-input");
+        const messages = document.getElementById("messages");
+        const sendButton = document.getElementById("send-button");
+
+        function addMessage(label, text, className) {
+            const message = document.createElement("div");
+            message.className = `message ${className}`;
+
+            const title = document.createElement("div");
+            title.className = "label";
+            title.textContent = label;
+
+            const content = document.createElement("div");
+            content.textContent = text;
+
+            message.appendChild(title);
+            message.appendChild(content);
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+
+            return content;
+        }
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const userMessage = input.value.trim();
+
+            if (!userMessage) {
+                return;
+            }
+
+            addMessage("You", userMessage, "user");
+
+            input.value = "";
+            input.disabled = true;
+            sendButton.disabled = true;
+            sendButton.textContent = "Thinking...";
+
+            const assistantContent = addMessage("AI", "Thinking...", "assistant");
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: userMessage
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || "Request failed");
+                }
+
+                assistantContent.textContent = data.response;
+            } catch (error) {
+                assistantContent.textContent = `Error: ${error.message}`;
+            } finally {
+                input.disabled = false;
+                sendButton.disabled = false;
+                sendButton.textContent = "Send";
+                input.focus();
+            }
+        });
+    </script>
+</body>
+</html>
